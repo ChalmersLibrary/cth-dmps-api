@@ -1,0 +1,8 @@
+ES_NODE="https://my.server.com:9200"
+ES_USER="elastic-uid"
+ES_PW="elastic-pw"
+ES_INDEX="name-of-elastic-index"
+SSL_KEY="path-to-key.pem"
+SSL_CERT="path-to-cert.pem"
+JWT_SECRET="secret-token"
+PORT="3000"

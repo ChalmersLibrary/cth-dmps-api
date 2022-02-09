@@ -1,0 +1,5 @@
+.env
+.vscode
+cert.pem
+key.pem
+node_modules

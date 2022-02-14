@@ -13,10 +13,10 @@ const { exit } = require('process');
 // Use SSL - https://nodejs.org/en/knowledge/HTTP/servers/how-to-create-a-HTTPS-server/
 const https = require('https');
 const fs = require('fs');
-const ssl_options = {
-  key: fs.readFileSync(process.env.SSL_KEY || 'key.pem'),
-  cert: fs.readFileSync(process.env.SSL_CERT || 'cert.pem')
-};
+// const ssl_options = {
+//   key: fs.readFileSync(process.env.SSL_KEY || 'key.pem'),
+//   cert: fs.readFileSync(process.env.SSL_CERT || 'cert.pem')
+// };
 
 var indexName = process.env.ES_INDEX || 'dsw-dmps';
 

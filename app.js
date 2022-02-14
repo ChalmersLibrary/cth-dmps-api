@@ -73,8 +73,8 @@ app.get('/search', function (req, res) {
   
   // Start server and listen on the specified port.
   // var server = https.createServer(ssl_options, app);
-  var server = https.createServer(app);
+  app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
-  server.listen(port, () => {
-    console.log("server starting on port : " + port)
-  });
+  // server.listen(port, () => {
+  //   console.log("server starting on port : " + port)
+  // });

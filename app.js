@@ -41,7 +41,7 @@ app.get('/', function (req, res) {
     });
   });
 
-app.get('/api/v1/search', function (req, res) {
+app.get('/api/v0/search', function (req, res) {
     res.setHeader('Content-Type', 'application/json');
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -68,7 +68,7 @@ app.get('/api/v1/search', function (req, res) {
         var r = {};
         var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC' 
         r['application'] = 'cth-dmps-api';
-        r['source'] = 'GET /api/v1/search/q=?' + req.query['q'];
+        r['source'] = 'GET /api/v0/search/q=?' + req.query['q'];
         r['time'] = currDateUtc;
         if (req.headers['user-agent']) {
           r['caller'] = req.headers['user-agent'];
@@ -94,7 +94,7 @@ app.get('/api/v1/search', function (req, res) {
       });
   });
   
-  app.get('/api/v1/plans/:planId', function (req, res) {
+  app.get('/api/v0/plans/:planId', function (req, res) {
     res.setHeader('Content-Type', 'application/json');
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -121,7 +121,7 @@ app.get('/api/v1/search', function (req, res) {
         var r = {};
         var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC' 
         r['application'] = 'cth-dmps-api';
-        r['source'] = 'GET /api/v1/plans/' + req.params['planId'];
+        r['source'] = 'GET /api/v0/plans/' + req.params['planId'];
         r['time'] = currDateUtc;
         if (req.headers['user-agent']) {
           r['caller'] = req.headers['user-agent'];

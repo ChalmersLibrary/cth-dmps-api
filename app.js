@@ -74,7 +74,14 @@ app.get('/api/v1/search', function (req, res) {
           r['caller'] = req.headers['user-agent'];
         }
         r['code'] = res.statusCode;
-        r['message'] = res.status.message;
+        if (res.statusMessage) {
+          r['message'] = res.statusMessage
+        }
+        else {
+          if (res.statusCode == '200') {
+            r['message'] = 'OK';
+          }   
+        }
         r['total_items'] = resCount;
         r['items'] = dmpArray;
         r['errors'] = []; // todo
@@ -87,6 +94,58 @@ app.get('/api/v1/search', function (req, res) {
       });
   });
   
+  app.get('/api/v1/plans/:planId', function (req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    //const payload = jwt.verify(token, process.env.JWT_SECRET)
+    if (token == process.env.JWT_SECRET) {
+        console.log("Authenticated!");
+    } 
+    else {
+        console.log("NOT Authenticated!");
+        return res.sendStatus(403);
+    }
+   
+    // Retrieve plan by (unique) id.
+    client
+      .search({ index: indexName, type: 'dmp', from: 0, size: 999, q: 'metadata.id:"' + req.params['planId'] + '"',  })
+      .then((results) => {
+        console.log(results);
+        // Get, format and return dmp data
+        var dmpArray = results.body.hits.hits.map(function(hit) {
+            return hit._source;
+           });
+        var resCount = results.body.hits.total;   
+        // Create JSON response
+        var r = {};
+        var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC' 
+        r['application'] = 'cth-dmps-api';
+        r['source'] = 'GET /api/v1/plans/' + req.params['planId'];
+        r['time'] = currDateUtc;
+        if (req.headers['user-agent']) {
+          r['caller'] = req.headers['user-agent'];
+        }
+        r['code'] = res.statusCode;
+        if (res.statusMessage) {
+          r['message'] = res.statusMessage
+        }
+        else {
+          if (res.statusCode == '200') {
+            r['message'] = 'OK';
+          }   
+        }
+        r['total_items'] = resCount;
+        r['items'] = dmpArray;
+        r['errors'] = []; // todo
+        res.json(r);   
+      })
+      .catch((err) => {
+        console.log(err);
+        res.send([]);
+      });
+  });
+
   // Start server and listen on the specified port.
   // var server = https.createServer(ssl_options, app);
   app.listen(port, () => console.log(`Example app listening on port ${port}!`));

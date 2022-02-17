@@ -109,7 +109,7 @@ app.get('/api/v0/search', function (req, res) {
    
     // Retrieve plan by (unique) id.
     client
-      .search({ index: indexName, type: 'dmp', from: 0, size: 999, q: 'metadata.id:"' + req.params['planId'] + '"',  })
+      .search({ index: indexName, type: 'dmp', from: 0, size: 999, q: '_id:"' + req.params['planId'] + '"',  })
       .then((results) => {
         console.log(results);
         // Get, format and return dmp data

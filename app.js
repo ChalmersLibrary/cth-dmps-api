@@ -41,16 +41,16 @@ app.get('/', function (req, res) {
     });
   });
 
-app.get('/search', function (req, res) {
+app.get('/api/v1/search', function (req, res) {
     res.setHeader('Content-Type', 'application/json');
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     //const payload = jwt.verify(token, process.env.JWT_SECRET)
     if (token == process.env.JWT_SECRET) {
-        console.log("Autenticated!");
+        console.log("Authenticated!");
     } 
     else {
-        console.log("NOT Autenticated!");
+        console.log("NOT Authenticated!");
         return res.sendStatus(403);
     }
    
@@ -63,7 +63,23 @@ app.get('/search', function (req, res) {
         var dmpArray = results.body.hits.hits.map(function(hit) {
             return hit._source;
            });
-        res.json(dmpArray);
+        var resCount = results.body.hits.total;   
+        // Create JSON response
+        var r = {};
+        var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC' 
+        r['application'] = 'cth-dmps-api';
+        r['source'] = 'GET /api/v1/search/q=?' + req.query['q'];
+        r['time'] = currDateUtc;
+        if (req.headers['user-agent']) {
+          r['caller'] = req.headers['user-agent'];
+        }
+        r['code'] = res.statusCode;
+        r['message'] = res.status.message;
+        r['total_items'] = resCount;
+        r['items'] = dmpArray;
+        r['errors'] = []; // todo
+        res.json(r);   
+        //res.json(dmpArray);
       })
       .catch((err) => {
         console.log(err);

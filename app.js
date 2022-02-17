@@ -94,6 +94,7 @@ app.get('/api/v0/search', function (req, res) {
       });
   });
   
+  // Retrieve plan by (unique) id.
   app.get('/api/v0/plans/:planId', function (req, res) {
     res.setHeader('Content-Type', 'application/json');
     const authHeader = req.headers['authorization'];
@@ -107,7 +108,6 @@ app.get('/api/v0/search', function (req, res) {
         return res.sendStatus(403);
     }
    
-    // Retrieve plan by (unique) id.
     client
       .search({ index: indexName, type: 'dmp', from: 0, size: 999, q: '_id:"' + req.params['planId'] + '"',  })
       .then((results) => {
@@ -149,7 +149,3 @@ app.get('/api/v0/search', function (req, res) {
   // Start server and listen on the specified port.
   // var server = https.createServer(ssl_options, app);
   app.listen(port, () => console.log(`Example app listening on port ${port}!`));
-
-  // server.listen(port, () => {
-  //   console.log("server starting on port : " + port)
-  // });

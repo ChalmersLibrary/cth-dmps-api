@@ -41,6 +41,21 @@ app.get('/', function (req, res) {
     });
   });
 
+app.get('/api/v0', function (req, res) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == process.env.JWT_SECRET) {
+    console.log("Authenticated!");
+  } 
+  else {
+    console.log("NOT Authenticated!");
+    return res.sendStatus(403);
+  }
+  res.sendFile('api.html', {
+    root: path.join(__dirname, 'views'),
+  });
+});
+
 app.get('/api/v0/search', function (req, res) {
     res.setHeader('Content-Type', 'application/json');
     const authHeader = req.headers['authorization'];

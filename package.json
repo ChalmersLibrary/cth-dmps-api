@@ -1,6 +1,6 @@
 {
   "name": "cth-dmps-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "REST API for searching and retrieving data management plans as RDA Common maDMP.",
   "main": "app.js",
   "scripts": {
@@ -10,10 +10,14 @@
   "author": "Urban Andersson",
   "license": "ISC",
   "dependencies": {
-    "@elastic/elasticsearch": "6.8",
-    "dotenv": "^15.0.0",
-    "elasticsearch": "^16.7.2",
-    "express": "^4.17.2",
-    "jsonwebtoken": "^8.5.1"
+    "@elastic/elasticsearch": "^6.8.8",
+    "dotenv": "^16.0.3",
+    "elasticsearch": "^16.7.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "engines": {
+    "npm": ">=9.0.0 <10.0.0",
+    "node": ">=18.0.0 <19.0.0"
   }
 }

@@ -13,6 +13,7 @@ const { exit } = require('process');
 // Use SSL - https://nodejs.org/en/knowledge/HTTP/servers/how-to-create-a-HTTPS-server/
 const https = require('https');
 const fs = require('fs');
+const { equal } = require('assert');
 // const ssl_options = {
 //   key: fs.readFileSync(process.env.SSL_KEY || 'key.pem'),
 //   cert: fs.readFileSync(process.env.SSL_CERT || 'cert.pem')
@@ -68,16 +69,23 @@ app.get('/api/v0/search', function (req, res) {
         console.log("NOT Authenticated!");
         return res.sendStatus(403);
     }
-   
+
     // Perform the actual search passing in the index, the search query, and the type.
     client
       .search({ index: indexName, type: 'dmp', from: 0, size: 999, q: req.query['q'],  })
       .then((results) => {
         console.log(results);
+
         // Get, format and return dmp data
         var dmpArray = results.body.hits.hits.map(function(hit) {
-            return hit._source;
-           });
+          if (req.headers['include-metadata'] == "True") {
+            return hit._source;  
+          } else {
+            var record = JSON.parse(JSON.stringify({ dmp: hit._source.dmp}  ));
+            return record;
+          }
+        });
+
         var resCount = results.body.hits.total;   
         // Create JSON response
         var r = {};
@@ -129,8 +137,13 @@ app.get('/api/v0/search', function (req, res) {
         console.log(results);
         // Get, format and return dmp data
         var dmpArray = results.body.hits.hits.map(function(hit) {
-            return hit._source;
-           });
+          if (req.headers['include-metadata'] == "True") {
+            return hit._source;  
+          } else {
+            var record = JSON.parse(JSON.stringify({ dmp: hit._source.dmp}  ));
+            return record;
+          }
+          });
         var resCount = results.body.hits.total;   
         // Create JSON response
         var r = {};

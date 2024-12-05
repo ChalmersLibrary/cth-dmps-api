@@ -2,7 +2,7 @@
 
 API web service for searching and retrieving DMPs from Chalmers University of Technology in RDA Common maDMP 1.1 format, using Lucene queries. 
 
-Before getting started, make sure you have installed [Node.js](https://nodejs.org/en/) and [Visual Studio Code](https://code.visualstudio.com/), and of course that you have access to an ES index containing records in maDMP JSON format. Using Elastic verion 7- might require some configuration changes.
+Before getting started, make sure you have installed [Node.js](https://nodejs.org/en/) and [Visual Studio Code](https://code.visualstudio.com/), and of course that you have access to an ES index containing records in maDMP JSON format. Using Elastic version 7- might require some configuration changes.
 
 1. Clone this repository.
 2. Run *npm install* from inside the directory.

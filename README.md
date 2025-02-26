@@ -13,5 +13,7 @@ Before getting started, make sure you have installed [Node.js](https://nodejs.or
 7. Open *app.js* and click *f5* to run the project.
 8. Go to localhost:3000 in your browser or REST client.
 
+A script for creating maDMP JSON records from DS Wizard is avilable at https://github.com/ChalmersLibrary/dsw2es.
+
 ## Documentation
 todo

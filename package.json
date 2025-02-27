@@ -13,6 +13,7 @@
     "@elastic/elasticsearch": "^6.8.8",
     "dotenv": "^16.0.3",
     "elasticsearch": "^16.7.3",
+    "es6": "npm:@elastic/elasticsearch@^6.8.8",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0"
   },

@@ -118,7 +118,7 @@ app.get('/', function (req, res) {
 // GET DMP(s) (with params)
 // spec: https://rda-dmp-common.github.io/common-madmp-api/#/DMP/listDMPs
 app.get('/dmps/:dmp_id?', authenticateToken, requireJsonAccept, validateRequest, function (req, res) {
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', req.headers['accept'] || 'application/json');
 
     const dmpId = req.params['dmp_id'];
     // If a dmp_id is provided in the path, search by _id; otherwise use query param or match-all

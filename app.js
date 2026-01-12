@@ -3,21 +3,15 @@ require('dotenv').config();
 var client = require("./elasticsearch.js");
 var express = require('express');
 const app = express();
-//const { query } = require("express");
 const bodyParser = require('body-parser');
 const path = require('path');
 // TODO: use JWT tokens for better security
-//const jwt = require('jsonwebtoken');
 const { exit } = require('process');
 
 // Use SSL - https://nodejs.org/en/knowledge/HTTP/servers/how-to-create-a-HTTPS-server/
 const https = require('https');
 const fs = require('fs');
 const { equal } = require('assert');
-// const ssl_options = {
-//   key: fs.readFileSync(process.env.SSL_KEY || 'key.pem'),
-//   cert: fs.readFileSync(process.env.SSL_CERT || 'cert.pem')
-// };
 
 // Authentication
 const authenticateToken = (req, res, next) => {
@@ -92,7 +86,6 @@ const allowGetOnly = (req, res, next) => {
 var indexName = process.env.ES_INDEX || 'dsw-dmps';
 
 app.use(bodyParser.json());
-//app.set('port', process.env.PORT || 3000);
 var port = process.env.PORT || 3000;
 
 // Set path to serve static files.
@@ -116,12 +109,15 @@ app.get('/', function (req, res) {
   });
 
 // GET DMP(s) (with params)
-// spec: https://rda-dmp-common.github.io/common-madmp-api/#/DMP/listDMPs
+// spec: https://rda-dmp-common.github.io/common-madmp-api/#/DMP/getDMP
 app.get('/dmps/:dmp_id?', authenticateToken, requireJsonAccept, validateRequest, function (req, res) {
     res.setHeader('Content-Type', req.headers['accept'] || 'application/json');
+    if (req.headers['user-agent']) {
+          res.setHeader('User-Agent', req.headers['user-agent']);
+    }
 
     const dmpId = req.params['dmp_id'];
-    // If a dmp_id is provided in the path, search by _id; otherwise use query param or match-all
+    // If a dmp_id is provided in the path, search by _id (an return a single dmp); otherwise use query param or match-all
     let queryStr;
     if (dmpId) {
       queryStr = 'dmp.dmp_id.identifier"' + dmpId + '"';
@@ -158,7 +154,7 @@ app.get('/dmps/:dmp_id?', authenticateToken, requireJsonAccept, validateRequest,
         if (queryStr != '*:*') {
           queryStr = queryStr + ' AND ' + 'dmp.ethical_issues_exists:no';
         } else {
-          queryStr = 'NOT dmp.ethical_issues_exists:no';
+          queryStr = 'dmp.ethical_issues_exists:no';
         }
       } else {
         // do nothing   
@@ -184,28 +180,30 @@ app.get('/dmps/:dmp_id?', authenticateToken, requireJsonAccept, validateRequest,
         });
 
         var resCount = results.body.hits.total;
+
         if (dmpId && resCount == 0) {
           return res.status(404).json({
             "error_message": "No DMP found for the provided dmp_id",
             "error_code": "dmp_not_found"
           });
-        }   
-        // Create JSON response
+        }
+
+        if (dmpId && resCount == 1) {
+          // Create single record JSON response
+          var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC';
+          var lastModified = dmpArray[0].dmp.modified || dmpArray[0].dmp.created || currDateUtc; 
+          res.setHeader('Last-Modified', lastModified);
+          return res.json(dmpArray[0]);
+        }
+
+        // Create full JSON response
         var r = {};
-        var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC' 
-        r['application'] = 'cth-dmps-api';
-        r['time'] = currDateUtc;
-        if (req.headers['user-agent']) {
-          r['caller'] = req.headers['user-agent'];
-        }
-        r['code'] = res.statusCode;
-        if (res.statusMessage) {
-          r['message'] = res.statusMessage
-        }
+        var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC'; 
+        
         r['total_count'] = resCount;
         r['items'] = dmpArray;
         r['errors'] = []; // todo
-        res.json(r);   
+        return res.json(r);   
       })
       .catch((err) => {
         console.log(err);
@@ -213,109 +211,12 @@ app.get('/dmps/:dmp_id?', authenticateToken, requireJsonAccept, validateRequest,
       });
   });
 
-app.get('/api/v0', authenticateToken, function (req, res) {
+app.get('/api/', authenticateToken, function (req, res) {
   res.sendFile('api.html', {
     root: path.join(__dirname, 'views'),
   });
 });
 
-app.get('/api/v0/search', authenticateToken, requireJsonAccept, function (req, res) {
-    res.setHeader('Content-Type', 'application/json');
-    
-    // Perform the actual search passing in the index, the search query, and the type.
-    client
-      .search({ index: indexName, type: 'dmp', from: 0, size: 9999, q: req.query['q'],  })
-      .then((results) => {
-        console.log(results);
-
-        // Get, format and return dmp data
-        var dmpArray = results.body.hits.hits.map(function(hit) {
-          if (req.headers['include-metadata'] == "True") {
-            return hit._source;  
-          } else {
-            var record = JSON.parse(JSON.stringify({ dmp: hit._source.dmp}  ));
-            return record;
-          }
-        });
-
-        var resCount = results.body.hits.total;   
-        // Create JSON response
-        var r = {};
-        var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC' 
-        r['application'] = 'cth-dmps-api';
-        r['source'] = 'GET /api/v0/search/q=?' + req.query['q'];
-        r['time'] = currDateUtc;
-        if (req.headers['user-agent']) {
-          r['caller'] = req.headers['user-agent'];
-        }
-        r['code'] = res.statusCode;
-        if (res.statusMessage) {
-          r['message'] = res.statusMessage
-        }
-        else {
-          if (res.statusCode == '200') {
-            r['message'] = 'OK';
-          }   
-        }
-        r['total_count'] = resCount;
-        r['items'] = dmpArray;
-        r['errors'] = []; // todo
-        res.json(r);   
-        //res.json(dmpArray);
-      })
-      .catch((err) => {
-        console.log(err);
-        res.send([]);
-      });
-  });
-  
-  // Retrieve plan by (unique) id.
-  app.get('/api/v0/plans/:planId', authenticateToken, requireJsonAccept, function (req, res) {
-    res.setHeader('Content-Type', 'application/json');
-    
-    client
-      .search({ index: indexName, type: 'dmp', from: 0, size: 999, q: '_id:"' + req.params['planId'] + '"',  })
-      .then((results) => {
-        console.log(results);
-        // Get, format and return dmp data
-        var dmpArray = results.body.hits.hits.map(function(hit) {
-          if (req.headers['include-metadata'] == "True") {
-            return hit._source;  
-          } else {
-            var record = JSON.parse(JSON.stringify({ dmp: hit._source.dmp}  ));
-            return record;
-          }
-          });
-        var resCount = results.body.hits.total;   
-        // Create JSON response
-        var r = {};
-        var currDateUtc = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + ' UTC' 
-        r['application'] = 'cth-dmps-api';
-        r['source'] = 'GET /api/v0/plans/' + req.params['planId'];
-        r['time'] = currDateUtc;
-        if (req.headers['user-agent']) {
-          r['caller'] = req.headers['user-agent'];
-        }
-        r['code'] = res.statusCode;
-        if (res.statusMessage) {
-          r['message'] = res.statusMessage
-        }
-        else {
-          if (res.statusCode == '200') {
-            r['message'] = 'OK';
-          }   
-        }
-        r['total_count'] = resCount;
-        r['items'] = dmpArray;
-        r['errors'] = []; // todo
-        res.json(r);   
-      })
-      .catch((err) => {
-        console.log(err);
-        res.send([]);
-      });
-  });
-
-  // Start server and listen on the specified port.
-  // var server = https.createServer(ssl_options, app);
-  app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+// Start server and listen on the specified port.
+// var server = https.createServer(ssl_options, app);
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
